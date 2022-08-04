@@ -1,0 +1,18 @@
+{
+    "main_app": {
+        "msg_app_start": "Программа запущена",
+        "window_title": "Выключение ВМ",  
+        "combo_box_placeholder":"Выбрать тег"
+    },
+    "check_dialog_window": {
+        "window_title": "Проверка",
+        "message": "введи yes",
+        "placeholder":"введи \"yes\"",
+        "message_title":"Ошибка",
+        "message_text":"Неправильный ввод"
+    },
+    "log":{
+        "app_start":"Программа запущена",
+        "check_cancel":"Проверка отменена, Операция включения\\отключения отменена"
+    }
+}
