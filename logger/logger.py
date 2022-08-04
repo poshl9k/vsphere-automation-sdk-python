@@ -21,6 +21,8 @@ class Logger(object):
         date_now = datetime.now().strftime("%d-%m-%Y")
         time_now = datetime.now().strftime("%H:%M:%S")
         # set new text
+        print(text)
         self.main_ui.ui.textBrowser.append(
             f'{date_now}\t{time_now}\t{text}')
         self.main_ui.ui.textBrowser.ensureCursorVisible()
+        self.main_ui.ui.textBrowser.update()

@@ -26,13 +26,6 @@ class CheckInputDialog(QDialog):
         self.layout.addWidget(self.textbox)
         self.layout.addWidget(self.buttonBox)
         self.setLayout(self.layout)
-        # self.textbox.installEventFilter(self)
-
-    # def eventFilter(self, obj, event):
-    #     if event.type() == QEvent.KeyPress and obj is self.textbox:
-    #         if event.key() == Qt.Key_Return and self.textbox.hasFocus():
-    #             print('Enter pressed')
-    #     return super().eventFilter(obj, event)
 
     def check_input(self):
         text = self.textbox.text()
@@ -40,20 +33,17 @@ class CheckInputDialog(QDialog):
             return self.accept()
 
         else:
-            # check_dialog_window.placeholder
             self.textbox.setPlaceholderText('введи "1122"')
-            self.textbox.setPlainText("")
+            self.textbox.setText("")
             msg = QMessageBox(self)
             msg.setIcon(QMessageBox.Icon.Warning)
             msg.setStandardButtons(QMessageBox.StandardButton.Yes)
             msg.setWindowTitle("Ошибка")  # check_dialog_window.message_title
-            # check_dialog_window.message_text
             msg.setText("Неправильный ввод")
             ret = msg.exec()
 
 
 class MainWindow(QMainWindow):
-    # logsignal = Signal()
     def __init__(self):
         super().__init__()
         # self.translate = json.loads()
@@ -75,7 +65,6 @@ class MainWindow(QMainWindow):
 
     def esxi_defaults(self):
         self.esxi.power_off = True
-        # self.ui.plainTextEdit
 
     def fill_in_combo_box(self):
         self.ui.comboBox.setPlaceholderText(
@@ -113,11 +102,9 @@ class MainWindow(QMainWindow):
                 vms = self.prepare_list_by_tag(tag)
         dlg = CheckInputDialog()
         returned_value = dlg.exec()
-        # Logger().write_log(returned_value)
         if returned_value:
             self.esxi.power_state_vms(vms)
         else:
-            # log.check_cancel
             Logger().write_log("Проверка отменена, Операция включения\\отключения отменена")
 
     def prepare_list_by_tag(self, selected_tag=None):
@@ -127,17 +114,8 @@ class MainWindow(QMainWindow):
                 pass
         return vms
 
-    # def write_log(self, text):
-    #     current_text = self.ui.textBrowser.toPlainText()
-    #     date_now = datetime.now().strftime("%d-%m-%Y")
-    #     time_now = datetime.now().strftime("%H:%M:%S")
-    #     # set new text
-    #     self.ui.textBrowser.setText(
-    #         f'{current_text}\n{date_now}\t{time_now}\t{text}')
-
-    #     self.ui.textBrowser.append()
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    # app.setWindowIcon(QIcon("icon.ico"))
+    app.setWindowIcon(QIcon("icon.ico"))
     window = MainWindow()
     sys.exit(app.exec())

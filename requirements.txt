@@ -1,0 +1,5 @@
+cx-freeze
+pip-check-reqs
+pip-chill
+pyside6
+requests

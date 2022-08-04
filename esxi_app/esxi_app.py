@@ -1,12 +1,10 @@
 import requests
 import urllib3
 from threading import Thread
-# from com.vmware.vcenter.vm_client import Power as HardPower
-from com.vmware.vcenter.vm.guest_client import Power
+from . import *
 from vmware.vapi.vsphere.client import create_vsphere_client
-from guest_helper import (wait_for_guest_power_state,
-                          wait_for_power_operations_state)
 from logger.logger import Logger
+import time
 
 
 class On_off(object):
@@ -89,25 +87,62 @@ class On_off(object):
         return self.vsphere_client.tagging.TagAssociation.list_attached_objects(tagid)
 
     def power_state_vms(self, vmlist):
+        allvms = self.vsphere_client.vcenter.VM.list()
         for vm in vmlist:
-            thr = Thread(target=self.work, args=[vm, ])
+            for vm_id in allvms:
+                if vm in vm_id.vm:
+                    vm_name = vm_id.name
+                    pass
+            thr = Thread(target=self.work, args=[vm, vm_name])
             thr.daemon = True
             thr.start()
 
-    def work(self, vm):
+    def work(self, vm, vm_name):
         if self.power_on == True:
-            # self.power_off = False
-            self.vsphere_client.vcenter.vm.Power.start(vm)
-            wait_for_power_operations_state(self.vsphere_client, vm,
-                                            True, self.STATE_TIMEOUT)
-            Logger().write_log("Включена машина {}.".format(vm))
-
+            chk_thr = Thread(target=self.check_vm_state,
+                             args=[vm, "power_up", vm_name])
         if self.power_off == True:
-            # self.power_on = False
-            self.vsphere_client.vcenter.vm.guest.Power.shutdown(vm)
-            wait_for_guest_power_state(self.vsphere_client, vm,
-                                       Power.State.NOT_RUNNING, self.STATE_TIMEOUT)
-            Logger().write_log('Выключена машина({})'.format(vm))
+            chk_thr = Thread(target=self.check_vm_state,
+                             args=[vm, "shutdown", vm_name])
 
-        else:
-            Logger().write_log("Нет команды включения/выключения")
+        chk_thr.daemon = True
+        chk_thr.start()
+
+    def check_vm_state(self, vm_id, state, vm_name):
+        alive = self.vsphere_client.vcenter.vm.guest.Power.get(
+            vm_id).operations_ready
+
+        if not alive and state == "shutdown":
+            Logger().write_log(f'ВМ {vm_name} vm-id({vm_id}) уже ВЫКЛЮЧЕНА')
+            return alive
+        elif state == "shutdown" and alive:
+            start = time.time()
+            timeout = start + self.STATE_TIMEOUT
+            self.vsphere_client.vcenter.vm.guest.Power.shutdown(vm_id)
+            desiredState = self.vsphere_client.vcenter.vm.guest.Power.State.NOT_RUNNING
+            while timeout > time.time():
+                state = self.vsphere_client.vcenter.vm.guest.Power.get(vm_id).state
+                if state != desiredState:
+                    print(f"Ожидаем выключения ВМ {vm_name} vm-id({vm_id}")
+                    time.sleep(5)
+                else:
+                    Logger().write_log(f'ВМ {vm_name} vm-id({vm_id}) успешно ВЫКЛЮЧЕНА')
+                    break
+            # Logger().write_log(f"[ВАЖНО]\tВремя ожидания ВЫКЛЮЧЕНИЯ истекло для ВМ {vm_name} vm-id({vm_id} ")
+        if alive and state == "power_up":
+            Logger().write_log(f'ВМ {vm_name} vm-id({vm_id}) уже ВКЛЮЧЕНА')
+            return alive
+        elif state == "power_up" and not alive:
+            start = time.time()
+            timeout = start + self.STATE_TIMEOUT
+            self.vsphere_client.vcenter.vm.Power.start(vm_id)
+            desiredState =self.vsphere_client.vcenter.vm.guest.Power.State.RUNNING
+            while timeout > time.time():
+                state = self.vsphere_client.vcenter.vm.guest.Power.get(vm_id).state
+                if state != desiredState:
+                    print(f"Ожидаем включения ВМ {vm_name} vm-id({vm_id}")
+                    time.sleep(5)
+                else:
+                    Logger().write_log(f'ВМ {vm_name} vm-id({vm_id}) успешно ВКЛЮЧЕНА')
+                    break
+            # Logger().write_log(f"[ВАЖНО]\tВремя ожидания ВКЛЮЧЕНИЯ истекло для ВМ {vm_name} vm-id({vm_id} ")
