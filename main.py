@@ -9,6 +9,7 @@ import json
 from mainwindow import Ui_MainWindow
 # MAIN WINDOW
 from logger.logger import Logger
+# import vmware
 
 
 class CheckInputDialog(QDialog):
@@ -116,6 +117,6 @@ class MainWindow(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    app.setWindowIcon(QIcon("icon.ico"))
+    # app.setWindowIcon(QIcon("icon.ico"))
     window = MainWindow()
     sys.exit(app.exec())
